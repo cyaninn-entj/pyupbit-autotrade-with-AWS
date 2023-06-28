@@ -1,0 +1,53 @@
+pipeline {
+    agent any
+    stages{
+        stage('kill proccess'){
+            steps{
+                script{
+                    try {
+                        sh "ansible TradeServer -i /home/Inventory.ini -a 'python3 CICDpipeline-Pord-Autotrade-EC2-TradeServer/kill_proccess.py'"
+                    } catch (e) {
+                        sh "echo proccess killed"
+                    } 
+                }
+            }
+            /*post {
+                failure {
+                    echo 'kill proccess failure'
+                }
+                success {
+                    echo 'kill proccess success'
+                }
+            }*/
+        }
+
+        stage('git pull'){
+            steps {
+                sh "ansible TradeServer -i /home/Inventory.ini -a 'rm -rf CICDpipeline-Pord-Autotrade-EC2-TradeServer/'"
+                sh "ansible TradeServer -i /home/Inventory.ini -a 'git clone https://github.com/cyaninn-entj/CICDpipeline-Pord-Autotrade-EC2-TradeServer.git'"
+            }
+            post {
+                failure {
+                    echo 'Git pull failure'
+                }
+                success {
+                    echo 'Git pull success'
+                }
+            }
+        }
+
+        stage('restart proccess'){
+            steps {
+                sh "ansible TradeServer -i /home/Inventory.ini -a 'chdir=/home/ubuntu/CICDpipeline-Pord-Autotrade-EC2-TradeServer sh run.sh'"
+            }
+            post {
+                failure {
+                    echo 'restart proccess failure'
+                }
+                success {
+                    echo 'restart proccess success'
+                }
+            }
+        }
+    }//stages end
+}//pipeline end
